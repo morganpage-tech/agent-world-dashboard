@@ -471,25 +471,28 @@
                         const action2 = getActionLabel(Number(enc.action2));
                         const status = enc.resolved ? '✅' : '⏳';
 
+                        // Use stakeAmount from contract, default to 10 AWLD if 0 (for old test encounters)
+                        // 10 AWLD = 10 * 10^18 wei
+                        const DEFAULT_STAKE = 10n * 10n**18n;
+                        const stake = enc.stakeAmount === 0n ? DEFAULT_STAKE : enc.stakeAmount;
+
                         // Calculate rewards based on game rules
                         // For challenges, determine winner based on timestamp (same logic as contract)
                         const agent1WinsChallenge = enc.resolved && (enc.timestamp % 2n === 0n);
                         const { reward1, reward2 } = calculateReward(
                             Number(enc.action1),
                             Number(enc.action2),
-                            enc.stakeAmount,
+                            stake,
                             agent1WinsChallenge
                         );
 
                         // Highlight rewards: green for gain, red for loss, gray for neutral
-                        const getRewardClass = (reward, stake) => {
+                        const getRewardClass = (reward) => {
                             if (!enc.resolved) return '';
                             if (reward > stake) return 'color: #10b981; font-weight: bold;'; // Gain
                             if (reward < stake) return 'color: #ef4444;'; // Loss
                             return 'color: #94a3b8;'; // Neutral
                         };
-
-                        const stake = enc.stakeAmount;
 
                         let row = table.children[i];
                         if (!row) {
@@ -501,8 +504,8 @@
                         row.innerHTML = `
                             <td class="address">${formatAddress(enc.agent1)}</td>
                             <td class="${action1.class}">${action1.text}</td>
-                            <td style="${getRewardClass(reward1, stake)}">${enc.resolved ? formatBalance(reward1, 18) + ' AWLD' : '-'}</td>
-                            <td style="${getRewardClass(reward2, stake)}">${enc.resolved ? formatBalance(reward2, 18) + ' AWLD' : '-'}</td>
+                            <td style="${getRewardClass(reward1)}">${enc.resolved ? formatBalance(reward1, 18) + ' AWLD' : '-'}</td>
+                            <td style="${getRewardClass(reward2)}">${enc.resolved ? formatBalance(reward2, 18) + ' AWLD' : '-'}</td>
                             <td class="${action2.class}">${action2.text}</td>
                             <td class="address">${formatAddress(enc.agent2)}</td>
                         `;
