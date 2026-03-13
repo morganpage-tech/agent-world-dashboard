@@ -248,9 +248,10 @@
                     <tr>
                         <th>Agent 1</th>
                         <th>Action</th>
+                        <th>Reward</th>
+                        <th>Reward</th>
                         <th>Action</th>
                         <th>Agent 2</th>
-                        <th>Result</th>
                     </tr>
                 </thead>
                 <tbody id="encountersTable"></tbody>
@@ -316,6 +317,43 @@
                 if (action === 2) return { text: 'DEFECT', class: 'action-defect' };
                 if (action === 3) return { text: 'CHALLENGE', class: 'action-challenge' };
                 return { text: 'NONE', class: '' };
+            }
+
+            // Calculate reward based on game rules from EncounterContract.sol
+            function calculateReward(action1, action2, stakeAmount, agent1WinsChallenge) {
+                // Challenge: winner takes all
+                if (action1 === 3 || action2 === 3) {
+                    if (agent1WinsChallenge) {
+                        return { reward1: stakeAmount * 2n, reward2: 0n };
+                    } else {
+                        return { reward1: 0n, reward2: stakeAmount * 2n };
+                    }
+                }
+
+                // COOPERATE + COOPERATE: Both get 1.5x stake (stake + 25% bonus)
+                if (action1 === 1 && action2 === 1) {
+                    const reward = stakeAmount + (stakeAmount / 2n);
+                    return { reward1: reward, reward2: reward };
+                }
+
+                // DEFECT + DEFECT: Both lose 50% (get 0.5x stake)
+                if (action1 === 2 && action2 === 2) {
+                    const halfStake = stakeAmount / 2n;
+                    return { reward1: halfStake, reward2: halfStake };
+                }
+
+                // DEFECT + COOPERATE: Defector exploits, takes all
+                if (action1 === 2 && action2 === 1) {
+                    return { reward1: stakeAmount * 2n, reward2: 0n };
+                }
+
+                // COOPERATE + DEFECT: Defector exploits, takes all
+                if (action1 === 1 && action2 === 2) {
+                    return { reward1: 0n, reward2: stakeAmount * 2n };
+                }
+
+                // Default (shouldn't reach here)
+                return { reward1: 0n, reward2: 0n };
             }
 
             // Register agent
@@ -433,6 +471,26 @@
                         const action2 = getActionLabel(Number(enc.action2));
                         const status = enc.resolved ? '✅' : '⏳';
 
+                        // Calculate rewards based on game rules
+                        // For challenges, determine winner based on timestamp (same logic as contract)
+                        const agent1WinsChallenge = enc.resolved && (enc.timestamp % 2n === 0n);
+                        const { reward1, reward2 } = calculateReward(
+                            Number(enc.action1),
+                            Number(enc.action2),
+                            enc.stakeAmount,
+                            agent1WinsChallenge
+                        );
+
+                        // Highlight rewards: green for gain, red for loss, gray for neutral
+                        const getRewardClass = (reward, stake) => {
+                            if (!enc.resolved) return '';
+                            if (reward > stake) return 'color: #10b981; font-weight: bold;'; // Gain
+                            if (reward < stake) return 'color: #ef4444;'; // Loss
+                            return 'color: #94a3b8;'; // Neutral
+                        };
+
+                        const stake = enc.stakeAmount;
+
                         let row = table.children[i];
                         if (!row) {
                             row = document.createElement('tr');
@@ -443,9 +501,10 @@
                         row.innerHTML = `
                             <td class="address">${formatAddress(enc.agent1)}</td>
                             <td class="${action1.class}">${action1.text}</td>
+                            <td style="${getRewardClass(reward1, stake)}">${enc.resolved ? formatBalance(reward1, 18) + ' AWLD' : '-'}</td>
+                            <td style="${getRewardClass(reward2, stake)}">${enc.resolved ? formatBalance(reward2, 18) + ' AWLD' : '-'}</td>
                             <td class="${action2.class}">${action2.text}</td>
                             <td class="address">${formatAddress(enc.agent2)}</td>
-                            <td>${status} ${formatBalance(enc.stakeAmount, 18)} AWLD</td>
                         `;
                     }
 
