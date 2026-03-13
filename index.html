@@ -476,6 +476,8 @@
                         const DEFAULT_STAKE = 10n * 10n**18n;
                         const stake = enc.stakeAmount === 0n ? DEFAULT_STAKE : enc.stakeAmount;
 
+                        console.log(`Encounter ${i}: action1=${enc.action1}, action2=${enc.action2}, stake=${enc.stakeAmount}, using=${stake}`);
+
                         // Calculate rewards based on game rules
                         // For challenges, determine winner based on timestamp (same logic as contract)
                         const agent1WinsChallenge = enc.resolved && (enc.timestamp % 2n === 0n);
@@ -485,6 +487,8 @@
                             stake,
                             agent1WinsChallenge
                         );
+
+                        console.log(`  Calculated rewards: reward1=${reward1}, reward2=${reward2}`);
 
                         // Highlight rewards: green for gain, red for loss, gray for neutral
                         const getRewardClass = (reward) => {
