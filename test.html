@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head><title>Agent World Test</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.min.js"></script>
+</head>
+<body style="font-family: monospace; padding: 20px; background: #1e293b; color: #e2e8f0;">
+<h1>🔧 Agent World Connection Test</h1>
+<div id="log"></div>
+
+<script>
+const log = document.getElementById('log');
+function add(msg, color = '#e2e8f0') {
+    log.innerHTML += `<div style="color: ${color}; margin: 5px 0;">${msg}</div>`;
+}
+
+async function test() {
+    add('Starting test...', '#f59e0b');
+
+    try {
+        const RPC_URL = 'https://sepolia.base.org';
+        const ADDRESSES = {
+            AgentToken: '0x886fD6c75D8019380956273316609FcC13227f9A',
+            ReputationContract: '0xeaf0cf4234e434a7E97A957d7fb93f13fb5a3512'
+        };
+
+        add(`Connecting to ${RPC_URL}...`);
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const blockNum = await provider.getBlockNumber();
+        add(`✅ Connected! Block: ${blockNum}`, '#10b981');
+
+        const REPUTATION_ABI = [
+            'function getLeaderboard() view returns (address[] memory, int256[] memory)'
+        ];
+
+        const reputation = new ethers.Contract(
+            ADDRESSES.ReputationContract,
+            REPUTATION_ABI,
+            provider
+        );
+
+        add('Calling getLeaderboard()...');
+        const [addresses, scores] = await reputation.getLeaderboard();
+
+        add(`✅ Found ${addresses.length} agents`, '#10b981');
+        add('Agent list:', '#94a3b8');
+
+        for (let i = 0; i < addresses.length; i++) {
+            add(`  ${i+1}. ${addresses[i]} (score: ${scores[i]})`, '#10b981');
+        }
+
+    } catch (error) {
+        add(`❌ Error: ${error.message}`, '#ef4444');
+        console.error(error);
+    }
+}
+
+test();
+</script>
+</body>
+</html>

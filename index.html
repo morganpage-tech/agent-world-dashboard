@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent World Dashboard</title>
+    <script src="https://unpkg.com/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            color: #f59e0b;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: #334155;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .address {
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #94a3b8;
+        }
+        .balance {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .reputation {
+            color: #8b5cf6;
+            font-weight: bold;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #475569;
+        }
+        .table th {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .table td {
+            font-size: 0.9em;
+        }
+        .action-cooperate {
+            color: #10b981;
+        }
+        .action-defect {
+            color: #ef4444;
+        }
+        .action-challenge {
+            color: #f59e0b;
+        }
+        input {
+            background: #334155;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 10px 15px;
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #059669;
+        }
+        button:disabled {
+            background: #64748b;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .status.loading {
+            background: #1e40af;
+            color: #93c5fd;
+        }
+        .status.success {
+            background: #065f46;
+            color: #6ee7b7;
+        }
+        .status.error {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: #334155;
+            border-radius: 8px;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐈 Agent World</h1>
+        <p class="subtitle">Multi-agent economic simulation • Base Sepolia</p>
+        <button onclick="loadAll()" style="margin-bottom: 15px; font-size: 0.9em;">🔄 Refresh Now</button>
+
+        <!-- Debug Info -->
+        <div id="debugInfo" style="background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 10px; margin-bottom: 20px; font-family: monospace; font-size: 0.85em; display: none;">
+            <div style="color: #94a3b8; margin-bottom: 5px;">🔧 Debug Log:</div>
+            <div id="debugLog"></div>
+        </div>
+
+        <!-- Network Info -->
+        <div class="section">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="agentCount">-</div>
+                    <div class="stat-label">Agents</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalBalance">-</div>
+                    <div class="stat-label">Total AWLD</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="encounterCount">-</div>
+                    <div class="stat-label">Encounters</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Register Agent -->
+        <div class="section">
+            <h2 class="section-title">Register New Agent</h2>
+            <input type="text" id="agentAddress" placeholder="0x..." />
+            <button onclick="registerAgent()" id="registerBtn">Register Agent</button>
+            <div id="registerStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <!-- Agents List -->
+        <div class="section">
+            <h2 class="section-title">Agents</h2>
+            <div class="grid" id="agentsGrid"></div>
+        </div>
+
+        <!-- Recent Encounters -->
+        <div class="section">
+            <h2 class="section-title">Recent Encounters</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Agent 1</th>
+                        <th>Action</th>
+                        <th>Action</th>
+                        <th>Agent 2</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody id="encountersTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Wait for ethers.js to load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM loaded, initializing contracts...');
+
+            // Contract addresses
+            const ADDRESSES = {
+                AgentToken: '0x886fD6c75D8019380956273316609FcC13227f9A',
+                ReputationContract: '0xeaf0cf4234e434a7E97A957d7fb93f13fb5a3512',
+                EncounterContract: '0x3d460622EFE66888cD45EAe4311d5b37d6312628'
+            };
+
+            const RPC_URL = 'https://sepolia.base.org';
+
+            // ABIs (minimal)
+            const AGENT_TOKEN_ABI = [
+                'function balanceOf(address) view returns (uint256)',
+                'function totalSupply() view returns (uint256)',
+                'function decimals() view returns (uint8)'
+            ];
+
+            const REPUTATION_ABI = [
+                'function getReputation(address) view returns (int256 score, uint256 totalInteractions, uint256 cooperationCount, uint256 defectCount)',
+                'function getLeaderboard() view returns (address[] memory, int256[] memory)',
+                'function isRegistered(address) view returns (bool)'
+            ];
+
+            const ENCOUNTER_ABI = [
+                'function encounters(uint256) view returns (address agent1, address agent2, uint256 stakeAmount, uint8 action1, uint8 action2, bool resolved, uint256 timestamp)',
+                'function encounterCounter() view returns (uint256)'
+            ];
+
+            const PROVIDER = new ethers.JsonRpcProvider(RPC_URL);
+            const agentToken = new ethers.Contract(ADDRESSES.AgentToken, AGENT_TOKEN_ABI, PROVIDER);
+            const reputationContract = new ethers.Contract(ADDRESSES.ReputationContract, REPUTATION_ABI, PROVIDER);
+            const encounterContract = new ethers.Contract(ADDRESSES.EncounterContract, ENCOUNTER_ABI, PROVIDER);
+
+            console.log('✅ Contracts initialized');
+
+            // Format address
+            function formatAddress(addr) {
+                return addr.slice(0, 6) + '...' + addr.slice(-4);
+            }
+
+            // Format balance
+            function formatBalance(balance, decimals) {
+                return Number(ethers.formatUnits(balance, decimals)).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            // Get action label
+            function getActionLabel(action) {
+                if (action === 1) return { text: 'COOPERATE', class: 'action-cooperate' };
+                if (action === 2) return { text: 'DEFECT', class: 'action-defect' };
+                if (action === 3) return { text: 'CHALLENGE', class: 'action-challenge' };
+                return { text: 'NONE', class: '' };
+            }
+
+            // Register agent
+            async function registerAgent() {
+                const address = document.getElementById('agentAddress').value.trim();
+                const btn = document.getElementById('registerBtn');
+                const status = document.getElementById('registerStatus');
+
+                if (!ethers.isAddress(address)) {
+                    showStatus(status, 'Invalid address', 'error');
+                    return;
+                }
+
+                try {
+                    btn.disabled = true;
+                    showStatus(status, 'Registering agent...', 'loading');
+
+                    // Check if already registered
+                    const isRegistered = await reputationContract.isRegistered(address);
+                    if (isRegistered) {
+                        showStatus(status, 'Agent already registered', 'success');
+                        loadAgents();
+                        return;
+                    }
+
+                    // Need a wallet to register - this won't work without private key
+                    showStatus(status, '⚠️ Requires wallet connection to register agents', 'error');
+
+                } catch (error) {
+                    showStatus(status, 'Error: ' + error.message, 'error');
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+
+            // Show status
+            function showStatus(el, message, type) {
+                el.textContent = message;
+                el.className = 'status ' + type;
+                el.style.display = 'block';
+            }
+
+            // Load agents
+            async function loadAgents() {
+                try {
+                    const [addresses, scores] = await reputationContract.getLeaderboard();
+                    const decimals = await agentToken.decimals();
+
+                    document.getElementById('agentCount').textContent = addresses.length;
+
+                    const grid = document.getElementById('agentsGrid');
+                    let totalBalance = 0n;
+
+                    // Update existing cards or create new ones
+                    for (let i = 0; i < addresses.length; i++) {
+                        const addr = addresses[i];
+                        const balance = await agentToken.balanceOf(addr);
+                        const rep = await reputationContract.getReputation(addr);
+
+                        totalBalance += balance;
+
+                        let card = document.getElementById(`agent-card-${i}`);
+                        if (!card) {
+                            card = document.createElement('div');
+                            card.id = `agent-card-${i}`;
+                            card.className = 'card';
+                            card.style.animation = 'fadeIn 0.3s ease-in';
+                            grid.appendChild(card);
+                        }
+
+                        card.innerHTML = `
+                            <div class="card-header">
+                                <span class="address">${formatAddress(addr)}</span>
+                            </div>
+                            <div>
+                                <div>Balance: <span class="balance">${formatBalance(balance, decimals)} AWLD</span></div>
+                                <div>Reputation: <span class="reputation">${rep.score.toString()}</span></div>
+                                <div style="margin-top: 5px; font-size: 0.85em; color: #94a3b8;">
+                                    ${rep.cooperationCount.toString()} 👍 • ${rep.defectCount.toString()} 👎 • ${rep.totalInteractions.toString()} ⚔️
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Remove extra cards
+                    while (grid.children.length > addresses.length) {
+                        grid.removeChild(grid.lastChild);
+                    }
+
+                    const totalSupply = await agentToken.totalSupply();
+                    document.getElementById('totalBalance').textContent = formatBalance(totalSupply, decimals);
+
+                } catch (error) {
+                    console.error('Error loading agents:', error);
+                }
+            }
+
+            // Load encounters
+            async function loadEncounters() {
+                try {
+                    const count = await encounterContract.encounterCounter();
+                    document.getElementById('encounterCount').textContent = count.toString();
+
+                    const table = document.getElementById('encountersTable');
+
+                    // Show last 10 encounters
+                    const toShow = Math.min(10, Number(count));
+
+                    // Update existing rows or create new ones
+                    for (let i = 0; i < toShow; i++) {
+                        const idx = count - 1n - BigInt(i);
+                        const enc = await encounterContract.encounters(idx);
+
+                        const action1 = getActionLabel(enc.action1);
+                        const action2 = getActionLabel(enc.action2);
+                        const status = enc.resolved ? '✅' : '⏳';
+
+                        let row = table.children[i];
+                        if (!row) {
+                            row = document.createElement('tr');
+                            row.style.animation = 'fadeIn 0.3s ease-in';
+                            table.appendChild(row);
+                        }
+
+                        row.innerHTML = `
+                            <td class="address">${formatAddress(enc.agent1)}</td>
+                            <td class="${action1.class}">${action1.text}</td>
+                            <td class="${action2.class}">${action2.text}</td>
+                            <td class="address">${formatAddress(enc.agent2)}</td>
+                            <td>${status} ${formatBalance(enc.stakeAmount, 18)} AWLD</td>
+                        `;
+                    }
+
+                    // Remove extra rows
+                    while (table.children.length > toShow) {
+                        table.removeChild(table.lastChild);
+                    }
+
+                } catch (error) {
+                    console.error('Error loading encounters:', error);
+                }
+            }
+
+            // Show debug log (only errors)
+            function debugLog(msg, isError = true) {
+                const log = document.getElementById('debugLog');
+                const time = new Date().toLocaleTimeString();
+                log.innerHTML = `<div style="color: ${isError ? '#ef4444' : '#10b981'};">[${time}] ${msg}</div>`;
+                document.getElementById('debugInfo').style.display = 'block';
+            }
+
+            // Load everything
+            async function loadAll() {
+                try {
+                    await Promise.all([loadAgents(), loadEncounters()]);
+                } catch (error) {
+                    debugLog(`❌ Error: ${error.message}`, true);
+                    console.error(error);
+                }
+            }
+
+            // Initial load
+            loadAll();
+
+            // Refresh every 30 seconds
+            setInterval(loadAll, 30000);
+
+            // Expose refresh button
+            window.loadAll = loadAll;
+        });
+    </script>
+</body>
+</html>
