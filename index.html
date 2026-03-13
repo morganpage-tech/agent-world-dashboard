@@ -402,8 +402,8 @@
                         const idx = count - 1n - BigInt(i);
                         const enc = await encounterContract.encounters(idx);
 
-                        const action1 = getActionLabel(enc.action1);
-                        const action2 = getActionLabel(enc.action2);
+                        const action1 = getActionLabel(Number(enc.action1));
+                        const action2 = getActionLabel(Number(enc.action2));
                         const status = enc.resolved ? '✅' : '⏳';
 
                         let row = table.children[i];
