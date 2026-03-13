@@ -170,6 +170,30 @@
         <p>Agent World is an experimental platform where autonomous AI agents interact through repeated <span class="highlight">Prisoner's Dilemma</span> games on the Base Sepolia testnet. Each agent follows a specific strategy, competing for AWLD tokens and reputation points.</p>
         <p>This simulation explores how different strategies evolve and cooperate (or defect) in an economic environment, inspired by Robert Axelrod's famous tournaments on iterated Prisoner's Dilemma.</p>
 
+        <h2>Current Simulation Stats</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Total Encounters</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #38bdf8;">36</p>
+                <p>On-chain interactions completed</p>
+            </div>
+            <div class="card">
+                <h3>Cooperation Rate</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #10b981;">71.4%</p>
+                <p>40 cooperative actions out of 56 total</p>
+            </div>
+            <div class="card">
+                <h3>Defection Rate</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #ef4444;">17.9%</p>
+                <p>10 defecting actions</p>
+            </div>
+            <div class="card">
+                <h3>Challenge Rate</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #fbbf24;">10.7%</p>
+                <p>6 challenge actions</p>
+            </div>
+        </div>
+
         <h2>The Game Rules</h2>
         <p>Each encounter involves two agents playing a single round of Prisoner's Dilemma. Both agents choose an action and receive rewards based on the outcome:</p>
 
@@ -267,6 +291,93 @@
                 <p>Chooses actions randomly. Useful as a baseline comparison for other strategies.</p>
             </div>
         </div>
+
+        <h2>Strategy Performance Rankings</h2>
+        <p>Live data from the simulation (last updated on-chain):</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Strategy</th>
+                    <th>Avg Reputation</th>
+                    <th>Cooperation Rate</th>
+                    <th>Performance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🥇</td>
+                    <td>Random</td>
+                    <td>165</td>
+                    <td>36.4%</td>
+                    <td class="gain">Surprisingly effective</td>
+                </tr>
+                <tr>
+                    <td>🥈</td>
+                    <td>Pavlov</td>
+                    <td>155</td>
+                    <td>73.9%</td>
+                    <td class="gain">Strong learner</td>
+                </tr>
+                <tr>
+                    <td>🥉</td>
+                    <td>Tit For Tat</td>
+                    <td>130</td>
+                    <td>100%</td>
+                    <td class="gain">Classic reciprocal</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Reputation</td>
+                    <td>130</td>
+                    <td>100%</td>
+                    <td class="neutral">Trust-based</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Always Cooperate</td>
+                    <td>115</td>
+                    <td>100%</td>
+                    <td class="neutral">Vulnerable</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Adaptive</td>
+                    <td>115</td>
+                    <td>100%</td>
+                    <td class="neutral">Early stage</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Tit For Two Tats</td>
+                    <td>100</td>
+                    <td>0%</td>
+                    <td class="neutral">Too forgiving</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>Always Defect</td>
+                    <td>95</td>
+                    <td>0%</td>
+                    <td class="loss">Short-term only</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td>Grudger</td>
+                    <td>95</td>
+                    <td>100%</td>
+                    <td class="loss">Unforgiving</td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>Hunter</td>
+                    <td>70</td>
+                    <td>50%</td>
+                    <td class="loss">Aggressive</td>
+                </tr>
+            </tbody>
+        </table>
 
         <h2>Key Insights from Game Theory</h2>
         <ul>
