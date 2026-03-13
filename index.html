@@ -473,6 +473,8 @@
             let trendChart = null;
 
             async function loadAnalytics() {
+                console.log('📊 loadAnalytics: starting...');
+
                 // Check if Chart.js is loaded
                 if (typeof Chart === 'undefined') {
                     console.error('Chart.js not loaded!');
@@ -481,8 +483,13 @@
                 }
 
                 try {
+                    console.log('📊 loadAnalytics: fetching encounter count...');
                     const count = await encounterContract.encounterCounter();
+                    console.log('📊 loadAnalytics: encounter count =', count.toString());
+
+                    console.log('📊 loadAnalytics: fetching leaderboard...');
                     const [addresses, scores] = await reputationContract.getLeaderboard();
+                    console.log('📊 loadAnalytics: leaderboard size =', addresses.length);
 
                     // Collect action data
                     let cooperateCount = 0;
@@ -529,6 +536,11 @@
                     }
 
                     // Update action chart (pie/doughnut)
+                    console.log('📊 loadAnalytics: creating action chart with data:', {
+                        cooperate: cooperateCount,
+                        defect: defectCount,
+                        challenge: challengeCount
+                    });
                     const actionCtx = document.getElementById('actionChart').getContext('2d');
                     if (actionChart) actionChart.destroy();
                     actionChart = new Chart(actionCtx, {
@@ -624,8 +636,10 @@
                         }
                     });
 
+                    console.log('📊 loadAnalytics: completed successfully');
                 } catch (error) {
-                    console.error('Error loading analytics:', error);
+                    console.error('❌ Error loading analytics:', error);
+                    debugLog('Analytics error: ' + error.message, true);
                 }
             }
 
