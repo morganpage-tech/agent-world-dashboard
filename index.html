@@ -523,17 +523,30 @@
                     const windowSize = 5;
                     const numWindows = Math.min(20, Math.ceil(encounters.length / windowSize));
 
+                    console.log('=== Trend Calculation Debug ===');
+                    console.log('Total encounters:', encounters.length);
+
                     for (let w = numWindows - 1; w >= 0; w--) {
                         let coop = 0, total = 0;
                         const startIdx = w * windowSize;
 
                         for (let j = 0; j < windowSize && (startIdx + j) < encounters.length; j++) {
                             const e = encounters[startIdx + j];
+                            const a1 = Number(e.action1);
+                            const a2 = Number(e.action2);
+
+                            // Debug: log first few encounters
+                            if (w === numWindows - 1 && j < 3) {
+                                console.log(`Encounter ${startIdx + j}: action1=${a1}, action2=${a2}`);
+                            }
+
                             // Count both actions regardless of resolved status
-                            if (e.action1 === 1) coop++;
-                            if (e.action2 === 1) coop++;
+                            if (a1 === 1) coop++;
+                            if (a2 === 1) coop++;
                             total += 2;
                         }
+
+                        console.log(`Window ${w}: coop=${coop}, total=${total}, rate=${(coop/total*100).toFixed(1)}%`);
 
                         if (total > 0) {
                             const rate = (coop / total * 100).toFixed(1);
