@@ -473,8 +473,6 @@
             let trendChart = null;
 
             async function loadAnalytics() {
-                console.log('📊 loadAnalytics: starting...');
-
                 // Check if Chart.js is loaded
                 if (typeof Chart === 'undefined') {
                     console.error('Chart.js not loaded!');
@@ -483,13 +481,8 @@
                 }
 
                 try {
-                    console.log('📊 loadAnalytics: fetching encounter count...');
                     const count = await encounterContract.encounterCounter();
-                    console.log('📊 loadAnalytics: encounter count =', count.toString());
-
-                    console.log('📊 loadAnalytics: fetching leaderboard...');
                     const [addresses, scores] = await reputationContract.getLeaderboard();
-                    console.log('📊 loadAnalytics: leaderboard size =', addresses.length);
 
                     // Collect action data
                     let cooperateCount = 0;
@@ -500,7 +493,6 @@
 
                     const sampleInterval = 5;
                     const maxEncounters = Math.min(100, Number(count));
-                    console.log('📊 loadAnalytics: fetching', maxEncounters, 'encounters in parallel...');
 
                     // Fetch all encounters in parallel for efficiency
                     const encounterPromises = [];
@@ -510,16 +502,6 @@
                     }
 
                     const encounters = await Promise.all(encounterPromises);
-                    console.log('📊 loadAnalytics: all encounters fetched, processing...');
-
-                    // Debug: print first encounter to see action values
-                    if (encounters.length > 0) {
-                        console.log('📊 loadAnalytics: sample encounter data:', {
-                            action1: Number(encounters[0].action1),
-                            action2: Number(encounters[0].action2),
-                            resolved: encounters[0].resolved
-                        });
-                    }
 
                     // Process encounters to count actions
                     for (let i = 0; i < encounters.length; i++) {
@@ -554,18 +536,7 @@
                         }
                     }
 
-                    console.log('📊 loadAnalytics: processed', encounters.length, 'encounters. Action counts:', {
-                        cooperate: cooperateCount,
-                        defect: defectCount,
-                        challenge: challengeCount
-                    });
-
                     // Update action chart (pie/doughnut)
-                    console.log('📊 loadAnalytics: creating action chart with data:', {
-                        cooperate: cooperateCount,
-                        defect: defectCount,
-                        challenge: challengeCount
-                    });
                     const actionCtx = document.getElementById('actionChart').getContext('2d');
                     if (actionChart) actionChart.destroy();
                     actionChart = new Chart(actionCtx, {
@@ -660,11 +631,8 @@
                             }
                         }
                     });
-
-                    console.log('📊 loadAnalytics: completed successfully');
                 } catch (error) {
-                    console.error('❌ Error loading analytics:', error);
-                    debugLog('Analytics error: ' + error.message, true);
+                    console.error('Error loading analytics:', error);
                 }
             }
 
