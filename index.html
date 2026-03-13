@@ -454,6 +454,25 @@
                 }
             }
 
+            // Helper: delay function
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // Helper: fetch encounter with retry logic
+            async function fetchEncounterWithRetry(idx, maxRetries = 3) {
+                for (let attempt = 0; attempt < maxRetries; attempt++) {
+                    try {
+                        const enc = await encounterContract.encounters(idx);
+                        return enc;
+                    } catch (error) {
+                        if (attempt === maxRetries - 1) throw error;
+                        // Wait longer between retries
+                        await delay(500 * (attempt + 1));
+                    }
+                }
+            }
+
             // Load encounters
             async function loadEncounters() {
                 try {
@@ -470,7 +489,13 @@
                     for (let i = 0; i < toShow; i++) {
                         try {
                             const idx = count - 1n - BigInt(i);
-                            const enc = await encounterContract.encounters(idx);
+
+                            // Add delay between fetches to avoid rate limiting
+                            if (i > 0) {
+                                await delay(100);
+                            }
+
+                            const enc = await fetchEncounterWithRetry(idx);
 
                         const action1 = getActionLabel(Number(enc.action1));
                         const action2 = getActionLabel(Number(enc.action2));
@@ -580,14 +605,21 @@
                     const sampleInterval = 5;
                     const maxEncounters = Math.min(100, Number(count));
 
-                    // Fetch all encounters in parallel for efficiency
-                    const encounterPromises = [];
+                    // Fetch encounters sequentially with delays to avoid rate limiting
+                    const encounters = [];
                     for (let i = 0; i < maxEncounters; i++) {
                         const idx = count - 1n - BigInt(i);
-                        encounterPromises.push(encounterContract.encounters(idx));
+                        try {
+                            const enc = await fetchEncounterWithRetry(idx, 2); // Fewer retries for analytics
+                            encounters.push(enc);
+                            // Add small delay between fetches
+                            if (i < maxEncounters - 1) {
+                                await delay(50);
+                            }
+                        } catch (error) {
+                            console.warn(`Failed to fetch encounter #${idx} for analytics, skipping:`, error.message);
+                        }
                     }
-
-                    const encounters = await Promise.all(encounterPromises);
 
                     // Process encounters to count actions and calculate trend
                     for (let i = 0; i < encounters.length; i++) {
