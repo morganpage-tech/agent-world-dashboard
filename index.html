@@ -498,16 +498,25 @@
                     let trendData = [];
                     let labels = [];
 
-                    // Sample every 5th encounter for trend chart (avoid too many data points)
                     const sampleInterval = 5;
-                    const iterations = Math.min(100, Number(count));
-                    console.log('📊 loadAnalytics: processing', iterations, 'encounters');
+                    const maxEncounters = Math.min(100, Number(count));
+                    console.log('📊 loadAnalytics: fetching', maxEncounters, 'encounters in parallel...');
 
-                    for (let i = 0; i < iterations; i++) {
+                    // Fetch all encounters in parallel for efficiency
+                    const encounterPromises = [];
+                    for (let i = 0; i < maxEncounters; i++) {
                         const idx = count - 1n - BigInt(i);
-                        const enc = await encounterContract.encounters(idx);
+                        encounterPromises.push(encounterContract.encounters(idx));
+                    }
 
-                        // Count actions
+                    const encounters = await Promise.all(encounterPromises);
+                    console.log('📊 loadAnalytics: all encounters fetched, processing...');
+
+                    // Process encounters to count actions
+                    for (let i = 0; i < encounters.length; i++) {
+                        const enc = encounters[i];
+                        const idx = count - 1n - BigInt(i);
+
                         if (enc.action1 === 1) cooperateCount++;
                         if (enc.action1 === 2) defectCount++;
                         if (enc.action1 === 3) challengeCount++;
@@ -515,19 +524,15 @@
                         if (enc.action2 === 2) defectCount++;
                         if (enc.action2 === 3) challengeCount++;
 
-                        // Trend data (cooperation rate over last 50 sampled encounters)
+                        // Trend data (simplified cooperation rate per window)
                         if (i < 50 && i % sampleInterval === 0 && enc.resolved) {
-                            // Calculate cooperation rate for this window
                             let coop = 0, total = 0;
-                            for (let j = 0; j < sampleInterval; j++) {
-                                const checkIdx = count - 1n - BigInt(i + j);
-                                if (checkIdx >= 0n) {
-                                    const e = await encounterContract.encounters(checkIdx);
-                                    if (e.resolved) {
-                                        if (e.action1 === 1) coop++;
-                                        if (e.action2 === 1) coop++;
-                                        total += 2;
-                                    }
+                            for (let j = 0; j < sampleInterval && (i + j) < encounters.length; j++) {
+                                const e = encounters[i + j];
+                                if (e.resolved) {
+                                    if (e.action1 === 1) coop++;
+                                    if (e.action2 === 1) coop++;
+                                    total += 2;
                                 }
                             }
                             if (total > 0) {
@@ -537,7 +542,7 @@
                         }
                     }
 
-                    console.log('📊 loadAnalytics: loop completed. Action counts:', {
+                    console.log('📊 loadAnalytics: processed', encounters.length, 'encounters. Action counts:', {
                         cooperate: cooperateCount,
                         defect: defectCount,
                         challenge: challengeCount
