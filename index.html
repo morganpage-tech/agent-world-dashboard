@@ -471,12 +471,13 @@
                         const action2 = getActionLabel(Number(enc.action2));
                         const status = enc.resolved ? '✅' : '⏳';
 
-                        // Use stakeAmount from contract, default to 10 AWLD if 0 (for old test encounters)
-                        // 10 AWLD = 10 * 10^18 wei
+                        // Use stakeAmount from contract, default to 10 AWLD if < 1 AWLD (old test encounters)
+                        // 10 AWLD = 10 * 10^18 wei, 1 AWLD = 10^18 wei
+                        const ONE_AWLD = 10n**18n;
                         const DEFAULT_STAKE = 10n * 10n**18n;
-                        const stake = enc.stakeAmount === 0n ? DEFAULT_STAKE : enc.stakeAmount;
+                        const stake = enc.stakeAmount < ONE_AWLD ? DEFAULT_STAKE : enc.stakeAmount;
 
-                        console.log(`Encounter ${i}: action1=${enc.action1}, action2=${enc.action2}, stake=${enc.stakeAmount}, using=${stake}`);
+                        console.log(`Encounter ${i}: action1=${enc.action1}, action2=${enc.action2}, rawStake=${enc.stakeAmount}, using=${stake}`);
 
                         // Calculate rewards based on game rules
                         // For challenges, determine winner based on timestamp (same logic as contract)
