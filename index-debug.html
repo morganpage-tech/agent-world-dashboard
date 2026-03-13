@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent World Dashboard - DEBUG</title>
+    <script src="https://unpkg.com/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: monospace; background: #1a1a2e; color: #eee; padding: 20px; }
+        .section { background: #16213e; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+        .log { background: #0f0f1a; padding: 10px; margin-top: 10px; max-height: 400px; overflow-y: auto; font-size: 0.85em; }
+        .log div { padding: 3px 0; border-bottom: 1px solid #2a2a4a; }
+        .log .error { color: #e94560; }
+        .log .success { color: #0f9; }
+        .log .info { color: #4da6ff; }
+        button { background: #0f9; color: #111; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Agent World Dashboard DEBUG</h1>
+    <button onclick="runDebug()">Run Debug</button>
+    <button onclick="clearLog()">Clear Log</button>
+
+    <div class="section">
+        <h2>Debug Log</h2>
+        <div class="log" id="debugLog"></div>
+    </div>
+
+    <div class="section">
+        <h2>Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const ADDRESSES = {
+            AgentToken: '0x886fD6c75D8019380956273316609FcC13227f9A',
+            ReputationContract: '0xeaf0cf4234e434a7E97A957d7fb93f13fb5a3512',
+            EncounterContract: '0x3d460622EFE66888cD45EAe4311d5b37d6312628'
+        };
+
+        const RPC_URL = 'https://sepolia.base.org';
+
+        const ENCOUNTER_ABI = [
+            'function encounters(uint256) view returns (address agent1, address agent2, uint256 stakeAmount, uint8 action1, uint8 action2, bool resolved, uint256 timestamp)',
+            'function encounterCounter() view returns (uint256)'
+        ];
+
+        function log(msg, type = 'info') {
+            const logEl = document.getElementById('debugLog');
+            const div = document.createElement('div');
+            div.className = type;
+            const time = new Date().toLocaleTimeString();
+            div.textContent = `[${time}] ${msg}`;
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(msg);
+        }
+
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function runDebug() {
+            clearLog();
+            log('Starting debug...', 'info');
+
+            try {
+                log('Connecting to provider...', 'info');
+                const PROVIDER = new ethers.JsonRpcProvider(RPC_URL);
+                log('✅ Provider connected', 'success');
+
+                log('Creating contract instance...', 'info');
+                const encounterContract = new ethers.Contract(ADDRESSES.EncounterContract, ENCOUNTER_ABI, PROVIDER);
+                log('✅ Contract created', 'success');
+
+                log('Getting encounter count...', 'info');
+                const count = await encounterContract.encounterCounter();
+                log(`✅ Total encounters: ${count}`, 'success');
+
+                log('Fetching last 5 encounters...', 'info');
+                const results = document.getElementById('results');
+
+                for (let i = 0; i < 5; i++) {
+                    const idx = count - 1n - BigInt(i);
+                    log(`  Fetching encounter #${idx}...`, 'info');
+
+                    const enc = await encounterContract.encounters(idx);
+
+                    const actionMap = {0: 'NONE', 1: 'COOP', 2: 'DEFECT', 3: 'CHALL'};
+
+                    log(`    Raw action1: ${enc.action1} (type: ${typeof enc.action1}, value: ${enc.action1})`, 'info');
+                    log(`    Raw action2: ${enc.action2} (type: ${typeof enc.action2}, value: ${enc.action2})`, 'info');
+                    log(`    Parsed action1: ${actionMap[Number(enc.action1)]}`, 'info');
+                    log(`    Parsed action2: ${actionMap[Number(enc.action2)]}`, 'info');
+
+                    results.innerHTML += `
+                        <div style="background: #0a0a15; padding: 10px; margin: 5px 0; border-radius: 4px;">
+                            <strong>#${idx}</strong><br>
+                            Agent1: ${enc.agent1}<br>
+                            Agent2: ${enc.agent2}<br>
+                            Action1: ${enc.action1} -> ${actionMap[Number(enc.action1)]}<br>
+                            Action2: ${enc.action2} -> ${actionMap[Number(enc.action2)]}<br>
+                            Resolved: ${enc.resolved}
+                        </div>
+                    `;
+                }
+
+                log('✅ Debug complete!', 'success');
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
