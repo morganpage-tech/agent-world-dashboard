@@ -466,9 +466,11 @@
                     const toShow = Math.min(10, Number(count));
 
                     // Update existing rows or create new ones
+                    let loadedCount = 0;
                     for (let i = 0; i < toShow; i++) {
-                        const idx = count - 1n - BigInt(i);
-                        const enc = await encounterContract.encounters(idx);
+                        try {
+                            const idx = count - 1n - BigInt(i);
+                            const enc = await encounterContract.encounters(idx);
 
                         const action1 = getActionLabel(Number(enc.action1));
                         const action2 = getActionLabel(Number(enc.action2));
@@ -517,7 +519,20 @@
                             <td class="${action2.class}">${action2.text}</td>
                             <td class="address">${formatAddress(enc.agent2)}</td>
                         `;
+                        loadedCount++;
+                        } catch (encError) {
+                            console.error(`Error loading encounter #${count - 1n - BigInt(i)}:`, encError);
+                            // Show error row
+                            let errorRow = table.children[i];
+                            if (!errorRow) {
+                                errorRow = document.createElement('tr');
+                                table.appendChild(errorRow);
+                            }
+                            errorRow.innerHTML = `<td colspan="6" style="color: #ef4444; text-align: center;">Error loading encounter</td>`;
+                        }
                     }
+
+                    console.log(`Loaded ${loadedCount}/${toShow} encounters`);
 
                     // Remove extra rows
                     while (table.children.length > toShow) {
@@ -526,6 +541,7 @@
 
                 } catch (error) {
                     console.error('Error loading encounters:', error);
+                    debugLog(`Error loading encounters: ${error.message}`, true);
                 }
             }
 
