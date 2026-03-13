@@ -526,12 +526,15 @@
                         const enc = encounters[i];
                         const idx = count - 1n - BigInt(i);
 
-                        if (enc.action1 === 1) cooperateCount++;
-                        if (enc.action1 === 2) defectCount++;
-                        if (enc.action1 === 3) challengeCount++;
-                        if (enc.action2 === 1) cooperateCount++;
-                        if (enc.action2 === 2) defectCount++;
-                        if (enc.action2 === 3) challengeCount++;
+                        const a1 = Number(enc.action1);
+                        const a2 = Number(enc.action2);
+
+                        if (a1 === 1) cooperateCount++;
+                        if (a1 === 2) defectCount++;
+                        if (a1 === 3) challengeCount++;
+                        if (a2 === 1) cooperateCount++;
+                        if (a2 === 2) defectCount++;
+                        if (a2 === 3) challengeCount++;
 
                         // Trend data (simplified cooperation rate per window)
                         if (i < 50 && i % sampleInterval === 0 && enc.resolved) {
