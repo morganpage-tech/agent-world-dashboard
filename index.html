@@ -500,8 +500,10 @@
 
                     // Sample every 5th encounter for trend chart (avoid too many data points)
                     const sampleInterval = 5;
+                    const iterations = Math.min(100, Number(count));
+                    console.log('📊 loadAnalytics: processing', iterations, 'encounters');
 
-                    for (let i = 0; i < Math.min(100, Number(count)); i++) {
+                    for (let i = 0; i < iterations; i++) {
                         const idx = count - 1n - BigInt(i);
                         const enc = await encounterContract.encounters(idx);
 
@@ -534,6 +536,12 @@
                             }
                         }
                     }
+
+                    console.log('📊 loadAnalytics: loop completed. Action counts:', {
+                        cooperate: cooperateCount,
+                        defect: defectCount,
+                        challenge: challengeCount
+                    });
 
                     // Update action chart (pie/doughnut)
                     console.log('📊 loadAnalytics: creating action chart with data:', {
