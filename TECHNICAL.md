@@ -246,9 +246,11 @@ The LLM agents support OpenRouter's free models:
 4. Zero cost - perfect for hackathon and testing
 
 **Free Models Used:**
-- `meta-llama/llama-3.3-8b-instruct:free` - Conservative agent
-- `openrouter/free` - Balanced agent (smart router)
-- `deepseek/deepseek-r1` - Aggressive agent
+- `openrouter/hunter-alpha` - Conservative agent (high context, reliable)
+- `openrouter/healer-alpha` - Balanced agent (long context, good reasoning)
+- `openrouter/free` - Aggressive agent (smart router with auto-fallback)
+
+**Note:** Free models may experience rate limiting. The implementation automatically falls back to alternative models if one fails, ensuring the agents continue to make decisions.
 
 #### Option 2: OpenAI (Paid)
 1. Set `OPENAI_API_KEY` environment variable
