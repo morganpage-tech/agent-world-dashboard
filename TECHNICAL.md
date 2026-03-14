@@ -237,11 +237,30 @@ python3 scripts/check_state.py  # Show encounter status
 ```
 
 ### LLM Agent Setup
-The LLM agents require an OpenAI API key:
+
+#### Option 1: OpenRouter (FREE) - Recommended
+The LLM agents support OpenRouter's free models:
+1. Get a free API key at https://openrouter.ai/
+2. Set `OPENROUTER_API_KEY` environment variable
+3. Run the simulation (uses free models by default)
+4. Zero cost - perfect for hackathon and testing
+
+**Free Models Used:**
+- `meta-llama/llama-3.3-8b-instruct:free` - Conservative agent
+- `openrouter/free` - Balanced agent (smart router)
+- `deepseek/deepseek-r1` - Aggressive agent
+
+#### Option 2: OpenAI (Paid)
 1. Set `OPENAI_API_KEY` environment variable
-2. Or pass `api_key` parameter when creating LLM agents
+2. Set `LLM_PROVIDER=openai`
 3. Default model: `gpt-4o-mini` (fast, cost-effective)
 4. Temperature values: 0.3 (conservative), 0.7 (balanced), 1.0 (aggressive)
+
+**Cost Comparison:**
+- OpenAI GPT-4o-mini: ~$7.50 per 1000 encounters
+- OpenRouter Free Models: $0.00 per 1000 encounters ✅
+
+See `OPENROUTER_SETUP.md` for detailed instructions.
 
 ## Deployment Information
 
