@@ -2,7 +2,7 @@
 
 ## Overview
 
-Agent World is a multi-agent economic simulation running on the Base Sepolia testnet. It models repeated game theory interactions between autonomous agents using the Prisoner's Dilemma framework, extended with reputation tracking and economic incentives.
+Agent World is a multi-agent economic simulation running on the Base Sepolia testnet. It models repeated game theory interactions between autonomous agents using the Prisoner's Dilemma framework, extended with reputation tracking, economic incentives, and **LLM-powered AI decision making**.
 
 ## Architecture
 
@@ -16,6 +16,11 @@ Agent World is a multi-agent economic simulation running on the Base Sepolia tes
 │  │  (Python)   │     │  (Python)   │     │  (Python)   │        │
 │  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘        │
 │         │                   │                   │                │
+│         │    ┌──────────────┼──────────────┐   │                │
+│         │    │              │              │   │                │
+│         │    │   Rule-based│   LLM Agents│   │                │
+│         │    │  Strategies  │ (GPT-4o-mini)│  │                │
+│         │    └──────────────┼──────────────┘   │                │
 │         └───────────────────┼───────────────────┘                │
 │                             │                                    │
 │                    ┌────────▼────────┐                          │
@@ -85,6 +90,8 @@ Standard ERC20 token used for staking and rewards.
 
 ### Implemented Strategies
 
+#### Rule-Based Strategies (10 agents)
+
 | Strategy | Description | Behavior |
 |----------|-------------|----------|
 | **AlwaysCooperate** | Trusts everyone | Always COOPERATE |
@@ -98,7 +105,45 @@ Standard ERC20 token used for staking and rewards.
 | **Hunter** | Exploitative | Targets high-reputation cooperators |
 | **Adaptive** | Mode-switching | Adjusts strategy based on performance |
 
-### Agent Implementation
+#### LLM-Powered AI Agents (3 agents - GPT-4o-mini)
+
+| Strategy | Temperature | Description | Behavior |
+|----------|-------------|-------------|----------|
+| **LLM_Conservative** | 0.3 (Low) | Predictable, cautious | Favors cooperation, builds long-term relationships, risk-averse |
+| **LLM_Balanced** | 0.7 (Medium) | Balanced exploration/exploitation | Adapts to opponent patterns, strategic flexibility |
+| **LLM_Aggressive** | 1.0 (High) | Exploratory, risk-taking | Tests novel strategies, unconventional approaches |
+
+### LLM Agent Architecture
+
+```python
+class LLMAgent(Agent):
+    """
+    AI agent that uses GPT-4o-mini to make strategic decisions.
+    """
+
+    def decide(self, opponent: str) -> Action:
+        # Gather context: history, reputation, patterns
+        context = self._build_context(opponent)
+
+        # Build prompt with game theory framework
+        prompt = self._build_prompt(context)
+
+        # Query LLM with temperature-controlled sampling
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an AI agent in Agent World..."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=self.temperature,  # 0.3, 0.7, or 1.0
+            max_tokens=100
+        )
+
+        # Parse LLM decision into Action
+        return self._parse_decision(response.choices[0].message.content)
+```
+
+### Agent Implementation (Base Class)
 
 ```python
 class Agent:
@@ -135,6 +180,7 @@ The main orchestrator that:
 - **Frontend:** Vanilla JavaScript + HTML
 - **Blockchain:** ethers.js v6.9.0
 - **Charts:** Chart.js 4.4.0
+- **AI/LLM:** OpenAI GPT-4o-mini API (3 agents)
 - **Deployment:** Vercel (auto-deploys from GitHub)
 
 ### Features
@@ -180,6 +226,8 @@ forge script Deploy.s.sol --rpc-url https://sepolia.base.org --broadcast
 ```bash
 cd /home/ubuntu/.nanobot/workspace/agent-world
 source agents/venv/bin/activate
+# Set OpenAI API key for LLM agents
+export OPENAI_API_KEY=your-api-key-here
 python3 scripts/continuous_runner.py
 ```
 
@@ -187,6 +235,13 @@ python3 scripts/continuous_runner.py
 ```bash
 python3 scripts/check_state.py  # Show encounter status
 ```
+
+### LLM Agent Setup
+The LLM agents require an OpenAI API key:
+1. Set `OPENAI_API_KEY` environment variable
+2. Or pass `api_key` parameter when creating LLM agents
+3. Default model: `gpt-4o-mini` (fast, cost-effective)
+4. Temperature values: 0.3 (conservative), 0.7 (balanced), 1.0 (aggressive)
 
 ## Deployment Information
 
@@ -203,11 +258,14 @@ Located at: `/home/ubuntu/.nanobot/workspace/agent-world/agents/agent-config.jso
 
 ## Future Enhancements
 
-1. **More Strategies** - Implement additional game theory strategies
-2. **Skill-based Challenges** - Replace random winner with skill metric
-3. **Agent Migration** - Allow agents to move between contracts
-4. **Tournament Mode** - Season-based competitions
-5. **Advanced Analytics** - Machine learning insights on strategy evolution
+1. **More AI Agents** - Implement additional LLM models (Claude, Gemini) for comparison
+2. **Hybrid Strategies** - Combine game theory with LLM decision making
+3. **Skill-based Challenges** - Replace random winner with skill metric
+4. **Agent Migration** - Allow agents to move between contracts
+5. **Tournament Mode** - Season-based competitions
+6. **Advanced Analytics** - Machine learning insights on strategy evolution
+7. **Prompt Engineering** - Optimize LLM prompts for better strategic reasoning
+8. **Multi-turn Conversations** - Allow LLM agents to negotiate before encounters
 
 ## References
 
