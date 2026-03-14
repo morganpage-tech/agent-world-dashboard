@@ -173,6 +173,11 @@
         <h2>Current Simulation Stats</h2>
         <div class="grid">
             <div class="card">
+                <h3>Total Agents</h3>
+                <p style="font-size: 2rem; font-weight: bold; color: #38bdf8;">13</p>
+                <p>10 rule-based + 3 AI-powered</p>
+            </div>
+            <div class="card">
                 <h3>Total Encounters</h3>
                 <p style="font-size: 2rem; font-weight: bold; color: #38bdf8;">36</p>
                 <p>On-chain interactions completed</p>
@@ -186,11 +191,6 @@
                 <h3>Defection Rate</h3>
                 <p style="font-size: 2rem; font-weight: bold; color: #ef4444;">17.9%</p>
                 <p>10 defecting actions</p>
-            </div>
-            <div class="card">
-                <h3>Challenge Rate</h3>
-                <p style="font-size: 2rem; font-weight: bold; color: #fbbf24;">10.7%</p>
-                <p>6 challenge actions</p>
             </div>
         </div>
 
@@ -249,6 +249,7 @@
         <h2>Agent Strategies</h2>
         <p>Each agent follows a programmed strategy based on its own history and opponent's behavior:</p>
 
+        <h3>🎮 Rule-Based Strategies (10 agents)</h3>
         <div class="grid">
             <div class="card">
                 <h3>Always Cooperate</h3>
@@ -289,6 +290,26 @@
             <div class="card">
                 <h3>Random</h3>
                 <p>Chooses actions randomly. Useful as a baseline comparison for other strategies.</p>
+            </div>
+        </div>
+
+        <h3>🤖 AI-Powered Agents (3 agents - GPT-4o-mini)</h3>
+        <p>These agents use Large Language Models to make context-aware strategic decisions based on encounter history, opponent behavior patterns, and reputation scores.</p>
+        <div class="grid">
+            <div class="card" style="border-color: #f59e0b;">
+                <h3 style="color: #f59e0b;">LLM_Conservative</h3>
+                <p><strong>Temperature: 0.3 (Low)</strong></p>
+                <p>Predictable and cautious. Favors cooperation, uses context-aware reasoning to build long-term relationships. Less likely to take risks.</p>
+            </div>
+            <div class="card" style="border-color: #f59e0b;">
+                <h3 style="color: #f59e0b;">LLM_Balanced</h3>
+                <p><strong>Temperature: 0.7 (Medium)</strong></p>
+                <p>Balances exploration and exploitation. Adapts to opponent patterns while maintaining strategic flexibility. Most likely to find optimal strategies.</p>
+            </div>
+            <div class="card" style="border-color: #f59e0b;">
+                <h3 style="color: #f59e0b;">LLM_Aggressive</h3>
+                <p><strong>Temperature: 1.0 (High)</strong></p>
+                <p>Exploratory and risk-taking. Tests novel strategies and unconventional approaches. May outperform in complex, dynamic environments.</p>
             </div>
         </div>
 
@@ -385,6 +406,7 @@
             <li><span class="warning">Pure altruism</span> (Always Cooperate) gets exploited by defectors</li>
             <li><span class="danger">Pure selfishness</span> (Always Defect) fails when reputation matters</li>
             <li><span class="highlight">Conditional cooperation</span> based on reciprocity creates stable ecosystems</li>
+            <li><span class="highlight">AI-powered agents</span> can learn patterns and adapt strategies beyond fixed rules</li>
             <li>The presence of multiple strategies creates complex emergent behaviors</li>
         </ul>
 
